@@ -1,0 +1,43 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Environment Variables
+.env
+
+# SQLite Database files
+*.db
+*.sqlite3
+instance/
+
+# Serialized Model Artifacts (keep dir, ignore bulky generated files)
+saved_models/*.pkl
+saved_models/*.joblib
+!saved_models/.gitkeep
+
+# Data files (ignore raw datasets from version control)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+saved_models/*.joblib

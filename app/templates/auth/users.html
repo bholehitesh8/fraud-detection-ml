@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}User Management &bull; FraudGuard ML Administration{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header Banner -->
+    <div class="dashboard-header">
+        <div>
+            <h2>User Identity &amp; Access Administration</h2>
+            <p>Manage security analyst accounts, configure role-based access control, and monitor authentication telemetry.</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+                <span>📊</span> Admin Dashboard
+            </a>
+            <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-secondary">
+                <span>📜</span> Audit Logs
+            </a>
+            <button type="button" class="btn btn-primary" onclick="openCreateUserModal()">
+                <span>➕</span> Provision New User
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div class="stat-label">Total Configured Accounts</div>
+            <div class="stat-value">{{ users|length }}</div>
+            <div class="stat-sub">SQLite Identity Store</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">System Administrators</div>
+            <div class="stat-value" style="color: var(--accent-blue);">
+                {{ users|selectattr('role', 'equalto', 'admin')|list|length }}
+            </div>
+            <div class="stat-sub">Elevated Privileges</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Fraud Analysts</div>
+            <div class="stat-value" style="color: var(--accent-cyan);">
+                {{ users|selectattr('role', 'equalto', 'analyst')|list|length }}
+            </div>
+            <div class="stat-sub">Inference &amp; Audit Tiers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Profiles</div>
+            <div class="stat-value" style="color: var(--status-safe);">
+                {{ users|selectattr('is_active', 'equalto', True)|list|length }}
+            </div>
+            <div class="stat-sub">Eligible for Login</div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="card" style="margin-bottom: 1.75rem; padding: 1.25rem;">
+        <form method="GET" action="{{ url_for('admin.users_list') }}" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;">
+            <div class="form-group" style="margin-bottom: 0; flex: 2; min-width: 200px;">
+                <label for="searchUsers" style="font-size: 0.78rem;">Search Username or Email</label>
+                <input type="text" class="form-control" id="searchUsers" name="q" value="{{ search or '' }}" placeholder="Search by username or email...">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+                <label for="roleFilter" style="font-size: 0.78rem;">Filter by Role</label>
+                <select class="form-control" id="roleFilter" name="role">
+                    <option value="">All Roles</option>
+                    <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Administrator</option>
+                    <option value="analyst" {% if role_filter == 'analyst' %}selected{% endif %}>Analyst</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+                <label for="statusFilter" style="font-size: 0.78rem;">Filter by Status</label>
+                <select class="form-control" id="statusFilter" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
+                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive Only</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.25rem;">
+                    Filter
+                </button>
+                <a href="{{ url_for('admin.users_list') }}" class="btn btn-secondary" style="padding: 0.65rem 1rem;">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Users Table Card -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 1.15rem;">Configured User Directory</h3>
+            <span class="badge badge-safe">{{ users|length }} Matched Records</span>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th>User Profile</th>
+                        <th>Institutional Email</th>
+                        <th>Security Role</th>
+                        <th>Account Status</th>
+                        <th>Security Telemetry</th>
+                        <th>Created Timestamp</th>
+                        <th>Last Login</th>
+                        <th style="text-align: right;">Administrative Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td><code>#{{ u.id }}</code></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                <span style="font-size: 1.25rem;">{% if u.role == 'admin' %}👑{% else %}🔬{% endif %}</span>
+                                <div>
+                                    <strong>{{ u.username }}</strong>
+                                    {% if current_user and current_user.id == u.id %}
+                                        <span class="badge badge-safe" style="font-size: 0.7rem; margin-left: 0.35rem;">You</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-secondary); font-size: 0.9rem;">
+                            {{ u.email }}
+                        </td>
+                        <td>
+                            <span class="nav-role-badge badge-{{ u.role }}" style="font-size: 0.78rem;">
+                                {{ u.role|upper }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if u.is_active %}
+                                <span class="badge badge-safe">Active</span>
+                            {% else %}
+                                <span class="badge badge-fraud">Deactivated</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.is_locked %}
+                                <span class="badge badge-fraud" title="Locked until lockout duration elapses">🔒 Locked</span>
+                            {% elif u.failed_login_attempts and u.failed_login_attempts > 0 %}
+                                <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;" title="{{ u.failed_login_attempts }} failed attempts">
+                                    ⚠️ {{ u.failed_login_attempts }} Failed
+                                </span>
+                            {% else %}
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">Normal</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted);">
+                            {{ u.created_at.strftime('%Y-%m-%d %H:%M') if u.created_at else 'N/A' }}
+                        </td>
+                        <td style="font-size: 0.85rem; color: var(--text-secondary);">
+                            {{ u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else 'Never' }}
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 0.4rem; justify-content: flex-end; align-items: center;">
+                                {% if current_user and current_user.id == u.id %}
+                                    <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">(Active Session)</span>
+                                {% elif single_admin_active and u.role == 'admin' and u.is_active %}
+                                    <span class="badge" style="background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); font-size: 0.75rem;" title="Cannot deactivate or demote the sole active administrator">
+                                        🛡️ Sole Admin Protected
+                                    </span>
+                                {% else %}
+                                    <!-- Role toggle form -->
+                                    <form action="{{ url_for('admin.change_user_role', user_id=u.id) }}" method="POST" style="display: inline;"
+                                          onsubmit="return confirm('Change role for {{ u.username }} to {{ 'analyst' if u.role == 'admin' else 'admin' }}?');">
+                                        <input type="hidden" name="role" value="{{ 'analyst' if u.role == 'admin' else 'admin' }}">
+                                        <button type="submit" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.78rem;"
+                                                title="Change role to {{ 'analyst' if u.role == 'admin' else 'admin' }}">
+                                            Set {{ 'Analyst' if u.role == 'admin' else 'Admin' }}
+                                        </button>
+                                    </form>
+
+                                    <!-- Status toggle form -->
+                                    <form action="{{ url_for('admin.toggle_user_status', user_id=u.id) }}" method="POST" style="display: inline;"
+                                          onsubmit="return confirm('Are you sure you want to {{ 'deactivate' if u.is_active else 'activate' }} account {{ u.username }}?');">
+                                        <button type="submit" class="btn {{ 'btn-danger' if u.is_active else 'btn-primary' }}"
+                                                style="padding: 0.3rem 0.6rem; font-size: 0.78rem;"
+                                                title="{{ 'Deactivate account' if u.is_active else 'Activate account' }}">
+                                            {{ 'Deactivate' if u.is_active else 'Activate' }}
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                            No user accounts matched your search/filter criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Provisioning New User -->
+<div class="modal-overlay" id="createUserModal">
+    <div class="modal-card" style="max-width: 520px;">
+        <div class="modal-header">
+            <h3>Provision New Platform User</h3>
+            <button type="button" class="modal-close" onclick="closeCreateUserModal()">&times;</button>
+        </div>
+        <form action="{{ url_for('admin.create_user') }}" method="POST" style="padding: 1.5rem;" novalidate>
+            <div class="form-group">
+                <label for="modalUsername">Username *</label>
+                <input type="text" class="form-control" id="modalUsername" name="username" placeholder="e.g. jdoe" required>
+            </div>
+            <div class="form-group">
+                <label for="modalEmail">Institutional Email *</label>
+                <input type="email" class="form-control" id="modalEmail" name="email" placeholder="e.g. jdoe@institution.edu" required>
+            </div>
+            <div class="form-group">
+                <label for="modalRole">Assigned Security Role *</label>
+                <select class="form-control" id="modalRole" name="role" required>
+                    <option value="analyst">Analyst (Inference &amp; Audit Tiers)</option>
+                    <option value="admin">Administrator (Full Access &amp; User Provisioning)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="modalPassword">Initial Password *</label>
+                <input type="password" class="form-control" id="modalPassword" name="password" placeholder="Min 8 chars with letters & numbers" required>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeCreateUserModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create User Account</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openCreateUserModal() {
+    const modal = document.getElementById("createUserModal");
+    if (modal) modal.classList.add("active");
+}
+function closeCreateUserModal() {
+    const modal = document.getElementById("createUserModal");
+    if (modal) modal.classList.remove("active");
+}
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeCreateUserModal();
+});
+</script>
+{% endblock %}

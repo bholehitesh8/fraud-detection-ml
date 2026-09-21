@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Security Operations Console &bull; FraudGuard AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header Banner -->
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <span class="system-status-indicator" style="font-size: 0.72rem; padding: 0.2rem 0.6rem;">
+                    <span class="status-dot"></span> SOC Operational
+                </span>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">Admin Privilege Tier</span>
+            </div>
+            <h2 style="font-size: 1.6rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">
+                Admin Operations &amp; Security Command Center
+            </h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                System-wide identity directory, ML inference throughput, and real-time security event telemetry.
+            </p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('admin.users_list') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.45rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>User Directory</span>
+            </a>
+            <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.45rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <span>Security Audit Logs</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Telemetry KPI Cards -->
+    <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.65rem;">
+                <div class="stat-label">Total Platform Users</div>
+                <div class="stat-icon" style="background: rgba(20, 184, 166, 0.1); color: #14b8a6; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+            </div>
+            <div class="stat-value">{{ total_users }}</div>
+            <div class="stat-sub" style="margin-top: 0.5rem;">
+                <span style="color: var(--status-safe); font-weight: 600;">{{ active_users }} Active</span> &bull;
+                <span style="color: var(--text-muted);">{{ inactive_users }} Inactive</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.65rem;">
+                <div class="stat-label">Role Distribution</div>
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+            </div>
+            <div class="stat-value" style="font-size: 1.35rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span style="color: #14b8a6;">{{ admin_count }} Admin</span>
+                <span style="color: var(--text-muted); font-size: 1rem;">/</span>
+                <span style="color: #10b981;">{{ analyst_count }} Analyst</span>
+            </div>
+            <div class="stat-sub" style="margin-top: 0.5rem;">Role-Based Access Control</div>
+        </div>
+
+        <div class="stat-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.65rem;">
+                <div class="stat-label">Audited Transactions</div>
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #34d399; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                </div>
+            </div>
+            <div class="stat-value">{{ total_predictions }}</div>
+            <div class="stat-sub" style="margin-top: 0.5rem;">Persisted in SQLite Ledger</div>
+        </div>
+
+        <div class="stat-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.65rem;">
+                <div class="stat-label">Inference Fraud Rate</div>
+                <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: #f87171; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+            </div>
+            <div class="stat-value" style="color: {{ 'var(--status-fraud)' if fraud_rate > 0 else 'var(--status-safe)' }};">
+                {{ fraud_rate }}%
+            </div>
+            <div class="stat-sub" style="margin-top: 0.5rem;">{{ fraud_predictions }} Flagged &bull; {{ safe_predictions }} Safe</div>
+        </div>
+    </div>
+
+    <!-- Security & System Architecture Status -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #14b8a6;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700;">Infrastructure Hardening &amp; Compliance</h3>
+            </div>
+            <span class="badge badge-safe" style="font-size: 0.74rem;">All Security Controls Enforced</span>
+        </div>
+        <div style="padding: 1.25rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+            <div class="diag-tile">
+                <span class="diag-label">Cryptographic KDF</span>
+                <strong class="diag-val">Werkzeug Scrypt Hashing</strong>
+            </div>
+            <div class="diag-tile">
+                <span class="diag-label">Session Security</span>
+                <strong class="diag-val">HttpOnly &bull; SameSite=Lax</strong>
+            </div>
+            <div class="diag-tile">
+                <span class="diag-label">Brute-Force Shield</span>
+                <strong class="diag-val">5 Attempts &bull; 15m Lockout</strong>
+            </div>
+            <div class="diag-tile">
+                <span class="diag-label">Application Headers</span>
+                <strong class="diag-val">CSP Level 2 &bull; Nosniff</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Security Audit Trail Feed -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #818cf8;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700;">Recent Security &amp; Authentication Events</h3>
+            </div>
+            <a href="{{ url_for('admin.audit_logs') }}" style="font-size: 0.85rem; color: #10b981; text-decoration: none; font-weight: 600;">
+                Full Audit Trail &rarr;
+            </a>
+        </div>
+
+        {% if recent_events and recent_events|length > 0 %}
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Category</th>
+                            <th>Action</th>
+                            <th>Description</th>
+                            <th>User Context</th>
+                            <th>IP Telemetry</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in recent_events %}
+                        <tr>
+                            <td style="font-size: 0.84rem; color: var(--text-muted); white-space: nowrap;">
+                                {{ event.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') if event.timestamp else 'N/A' }}
+                            </td>
+                            <td>
+                                <span class="event-type-pill event-{{ event.event_type|lower }}">
+                                    {{ event.event_type }}
+                                </span>
+                            </td>
+                            <td><code>{{ event.action }}</code></td>
+                            <td style="font-size: 0.88rem; color: var(--text-primary);">
+                                {{ event.description }}
+                            </td>
+                            <td>
+                                <strong>{{ event.username or 'Anonymous' }}</strong>
+                            </td>
+                            <td style="font-size: 0.82rem; color: var(--text-muted); font-family: monospace;">
+                                {{ event.ip_address or 'Unknown' }}
+                            </td>
+                            <td>
+                                {% if event.status == 'SUCCESS' %}
+                                    <span class="badge badge-safe">SUCCESS</span>
+                                {% elif event.status == 'WARNING' %}
+                                    <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4);">WARNING</span>
+                                {% else %}
+                                    <span class="badge badge-fraud">FAILURE</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div style="padding: 3rem; text-align: center; color: var(--text-muted);">
+                <p>No security audit records logged yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

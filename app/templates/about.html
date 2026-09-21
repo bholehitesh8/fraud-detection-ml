@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}About & Viva Voce Guide &bull; Fraud Detection ML{% endblock %}
+
+{% block content %}
+<div style="max-width: 960px; margin: 0 auto;">
+    <!-- Page Header -->
+    <div style="margin-bottom: 2.5rem; text-align: center;">
+        <span class="hero-tag">Academic Capstone Documentation</span>
+        <h2 style="font-size: 2.25rem; font-weight: 800; margin: 0.5rem 0 0.75rem;">
+            Fraud Detection in Online Transactions using Machine Learning
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 1.05rem; max-width: 700px; margin: 0 auto;">
+            Engineering architecture, benchmark evaluation metrics, and comprehensive Viva Voce presentation defense guide.
+        </p>
+    </div>
+
+    <!-- Live System Diagnostic Card -->
+    <div class="card" style="margin-bottom: 2rem; border-color: rgba(59, 130, 246, 0.4);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <h3>⚡ Live System Diagnostic Status</h3>
+            <span class="badge badge-safe" id="aboutDiagStatus">● Operational &bull; All Subsystems Active</span>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 0.35rem;">
+            Real-time health telemetry queried directly from <code>/api/health</code>.
+        </p>
+        <div class="spec-grid" style="margin-top: 1rem;">
+            <div class="spec-item">
+                <div class="spec-val" id="diagModel" style="color: var(--accent-cyan); font-size: 1.1rem;">ExtraTrees v1.0</div>
+                <div class="spec-lbl">Classifier Artifact</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-val" id="diagPrep" style="color: var(--status-safe); font-size: 1.1rem;">Loaded (16 Feats)</div>
+                <div class="spec-lbl">Preprocessor Pipeline</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-val" id="diagDb" style="color: var(--accent-blue); font-size: 1.1rem;">Connected (SQLite)</div>
+                <div class="spec-lbl">Audit Database</div>
+            </div>
+            <div class="spec-item">
+                <div class="spec-val" id="diagLatency" style="color: #a78bfa; font-size: 1.1rem;">&lt; 100 ms</div>
+                <div class="spec-lbl">Average Scoring Latency</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Multi-Model Benchmark Comparison Table -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>📊 Supervised Models Empirical Benchmark (Unseen Test Partition: N=1,200)</h3>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.5rem 0 1.25rem;">
+            Evaluated on real domain data with 27.57 : 1 class imbalance using balanced sample weighting.
+        </p>
+        <div style="overflow-x: auto;">
+            <table class="data-table" style="font-size: 0.88rem;">
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>Overall Acc</th>
+                        <th>Fraud F1-Score</th>
+                        <th>Fraud Recall</th>
+                        <th>ROC-AUC</th>
+                        <th>Selection Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: rgba(16, 185, 129, 0.08); font-weight: 600;">
+                        <td><strong>ExtraTrees</strong></td>
+                        <td style="color: var(--status-safe);">100.00%</td>
+                        <td style="color: var(--status-safe);">1.0000</td>
+                        <td style="color: var(--status-safe);">1.0000</td>
+                        <td style="color: var(--status-safe);">1.0000</td>
+                        <td><span class="badge badge-safe">★ Selected Winner</span></td>
+                    </tr>
+                    <tr>
+                        <td>RandomForest</td>
+                        <td>99.92%</td>
+                        <td>0.9882</td>
+                        <td>1.0000</td>
+                        <td>1.0000</td>
+                        <td><span class="badge badge-risk">Candidate</span></td>
+                    </tr>
+                    <tr>
+                        <td>HistGradientBoosting</td>
+                        <td>99.75%</td>
+                        <td>0.9647</td>
+                        <td>0.9762</td>
+                        <td>0.9999</td>
+                        <td><span class="badge badge-risk">Candidate</span></td>
+                    </tr>
+                    <tr>
+                        <td>LogisticRegression</td>
+                        <td>99.67%</td>
+                        <td>0.9545</td>
+                        <td>1.0000</td>
+                        <td>0.9999</td>
+                        <td><span class="badge badge-risk">Baseline</span></td>
+                    </tr>
+                    <tr>
+                        <td>DecisionTree</td>
+                        <td>99.67%</td>
+                        <td>0.9535</td>
+                        <td>0.9762</td>
+                        <td>0.9876</td>
+                        <td><span class="badge badge-risk">Candidate</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section: Architecture & Separation of Concerns -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>🏗️ System Architecture & Separation of Concerns</h3>
+        <div style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="background: var(--bg-surface-elevated); padding: 1.1rem; border-radius: var(--radius-md);">
+                <strong style="color: var(--color-emerald, #10b981);">1. Modern Frontend</strong>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    Responsive HTML5/CSS3/Vanilla JS with glassmorphic styling, preset scenarios, AJAX scoring, and detail modals.
+                </p>
+            </div>
+            <div style="background: var(--bg-surface-elevated); padding: 1.1rem; border-radius: var(--radius-md);">
+                <strong style="color: var(--color-teal, #14b8a6);">2. Flask Backend</strong>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    Application Factory pattern with Blueprints (<code>main_bp</code>, <code>transaction_bp</code>, <code>api_bp</code>) and RESTful JSON APIs.
+                </p>
+            </div>
+            <div style="background: var(--bg-surface-elevated); padding: 1.1rem; border-radius: var(--radius-md);">
+                <strong style="color: var(--status-safe);">3. Machine Learning Subsystem</strong>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    Cached in-memory <code>PredictionService</code>, <code>ColumnTransformer</code>, and winning <code>ExtraTrees</code> classifier.
+                </p>
+            </div>
+            <div style="background: var(--bg-surface-elevated); padding: 1.1rem; border-radius: var(--radius-md);">
+                <strong style="color: var(--status-warn);">4. Database History Ledger</strong>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    SQLite ORM via Flask-SQLAlchemy with masked PII, B-tree indexes, atomic rollbacks, and schema auto-migration.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Viva Voce Defense Guide -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <h3>🎓 Viva Voce Defense Questions & Answers</h3>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 0.35rem 0 1.5rem;">
+            Essential academic defense questions covering Machine Learning principles, accounting constraints, and production design.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 1.35rem;">
+            <div>
+                <strong style="color: #10b981; font-size: 1rem;">Q1: What is the main objective of this project?</strong>
+                <p style="font-size: 0.92rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    <strong>Answer:</strong> To construct a real-time predictive surveillance system that identifies fraudulent online banking transactions using supervised Machine Learning. The system precalculates domain balance anomaly indicators, normalizes multi-currency transfers into USD, evaluates fraud probability in &lt;100ms, and logs all outcomes in an auditable SQLite database.
+                </p>
+            </div>
+
+            <div>
+                <strong style="color: #10b981; font-size: 1rem;">Q2: Why is raw Accuracy an invalid evaluation metric for financial fraud?</strong>
+                <p style="font-size: 0.92rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    <strong>Answer:</strong> Financial transaction datasets exhibit extreme class imbalance (96.5% legitimate vs 3.5% fraud in this benchmark). A naive model that classifies 100% of transactions as legitimate achieves an apparent <strong>96.50% Accuracy</strong> while failing to intercept even a single fraud dollar (0% Recall, 0% F1). Thus, <strong>Fraud Class F1-Score</strong> (harmonic mean of Precision and Recall) and <strong>ROC-AUC</strong> are the mathematically valid criteria for model selection.
+                </p>
+            </div>
+
+            <div>
+                <strong style="color: #10b981; font-size: 1rem;">Q3: Which Machine Learning algorithm was selected and why?</strong>
+                <p style="font-size: 0.92rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    <strong>Answer:</strong> <strong>ExtraTrees (Extremely Randomized Trees)</strong>. On the 1,200 unseen test instances, it achieved a perfect <strong>1.0000 Fraud F1-Score</strong>, 100% Recall (42/42 fraud caught), 1.0000 ROC-AUC, and 0 false positives. By randomly selecting split cut-points across 100 trees, ExtraTrees significantly reduces variance and prevents overfitting on skewed financial numbers.
+                </p>
+            </div>
+
+            <div>
+                <strong style="color: #10b981; font-size: 1rem;">Q4: How did you handle class imbalance without generating fake data via SMOTE?</strong>
+                <p style="font-size: 0.92rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    <strong>Answer:</strong> Financial transactions are bound by strict mathematical accounting equations (e.g. $NewBalance = OldBalance \pm Amount$). Blind synthetic oversampling (SMOTE) generates synthetic interpolations that violate accounting conservation laws and distort real-world distribution boundaries. Instead, we use <strong>balanced class weights</strong> ($W_{fraud} = 14.2857$), inversely penalizing minority classification errors during optimization without feature corruption.
+                </p>
+            </div>
+
+            <div>
+                <strong style="color: #10b981; font-size: 1rem;">Q5: What is Data Leakage and how is it rigorously prevented?</strong>
+                <p style="font-size: 0.92rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    <strong>Answer:</strong> Data leakage occurs when test set parameters (such as medians, IQR scaling boundaries, or one-hot categories) bleed into the training phase. In our pipeline, stratified train-test splitting (80/20) is executed <em>before</em> preprocessing. The <code>ColumnTransformer</code> pipeline is fitted strictly on <code>X_train</code>, and <code>X_test</code> is transformed solely using those learned parameters.
+                </p>
+            </div>
+
+            <div>
+                <strong style="color: #10b981; font-size: 1rem;">Q6: Why is RobustScaler preferred over StandardScaler for financial transactions?</strong>
+                <p style="font-size: 0.92rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    <strong>Answer:</strong> Financial transaction amounts follow heavy-tailed power-law distributions with massive outliers (e.g. $10 micro-payments up to $500,000 corporate transfers). <code>StandardScaler</code> relies on sample mean and standard deviation, which are severely biased by extreme values. <code>RobustScaler</code> uses the median and Interquartile Range (IQR = $Q_3 - Q_1$), guaranteeing robust, outlier-immune scaling.
+                </p>
+            </div>
+
+            <div>
+                <strong style="color: #10b981; font-size: 1rem;">Q7: How does the system handle multi-currency transactions and account privacy?</strong>
+                <p style="font-size: 0.92rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    <strong>Answer:</strong> The API validates standard ISO 4217 currency codes (USD, EUR, INR, GBP, etc.) and normalizes monetary values into baseline USD prior to ML inference using reference exchange rates. For privacy, customer account numbers are sanitized and masked (e.g. <code>******7890</code>) before database persistence and server logging.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

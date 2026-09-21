@@ -1,0 +1,6 @@
+Model,Accuracy,Balanced_Accuracy,Fraud_Precision,Fraud_Recall,Fraud_F1,ROC_AUC,PR_AUC,TP,FP,TN,FN
+LogisticRegression,0.9967,0.9983,0.913,1.0,0.9545,0.9999,0.9983,42,4,1154,0
+DecisionTree,0.9967,0.9868,0.9318,0.9762,0.9535,0.9876,0.9516,41,3,1155,1
+RandomForest,0.9992,0.9996,0.9767,1.0,0.9882,1.0,1.0,42,1,1157,0
+HistGradientBoosting,0.9975,0.9872,0.9535,0.9762,0.9647,0.9999,0.9984,41,2,1156,1
+ExtraTrees,1.0,1.0,1.0,1.0,1.0,1.0,1.0,42,0,1158,0

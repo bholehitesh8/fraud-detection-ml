@@ -1,0 +1,92 @@
+{
+  "LogisticRegression": {
+    "raw": [
+      [
+        1154,
+        4
+      ],
+      [
+        0,
+        42
+      ]
+    ],
+    "true_negatives": 1154,
+    "false_positives": 4,
+    "false_negatives": 0,
+    "true_positives": 42,
+    "specificity": 0.9965457685664939,
+    "false_positive_rate": 0.0034542314335060447
+  },
+  "DecisionTree": {
+    "raw": [
+      [
+        1155,
+        3
+      ],
+      [
+        1,
+        41
+      ]
+    ],
+    "true_negatives": 1155,
+    "false_positives": 3,
+    "false_negatives": 1,
+    "true_positives": 41,
+    "specificity": 0.9974093264248705,
+    "false_positive_rate": 0.0025906735751295338
+  },
+  "RandomForest": {
+    "raw": [
+      [
+        1157,
+        1
+      ],
+      [
+        0,
+        42
+      ]
+    ],
+    "true_negatives": 1157,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "true_positives": 42,
+    "specificity": 0.9991364421416234,
+    "false_positive_rate": 0.0008635578583765112
+  },
+  "HistGradientBoosting": {
+    "raw": [
+      [
+        1156,
+        2
+      ],
+      [
+        1,
+        41
+      ]
+    ],
+    "true_negatives": 1156,
+    "false_positives": 2,
+    "false_negatives": 1,
+    "true_positives": 41,
+    "specificity": 0.998272884283247,
+    "false_positive_rate": 0.0017271157167530224
+  },
+  "ExtraTrees": {
+    "raw": [
+      [
+        1158,
+        0
+      ],
+      [
+        0,
+        42
+      ]
+    ],
+    "true_negatives": 1158,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "true_positives": 42,
+    "specificity": 1.0,
+    "false_positive_rate": 0.0
+  }
+}

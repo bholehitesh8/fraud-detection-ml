@@ -1,0 +1,80 @@
+{
+  "selected_model_name": "ExtraTrees",
+  "selection_rule": {
+    "primary_metric": "fraud_f1",
+    "tie_breaker_metric": "roc_auc",
+    "tertiary_metric": "fraud_recall",
+    "justification": "Fraud detection demands high sensitivity to rare positive events (~3.5% fraud) while minimizing false customer declines. F1-score balances precision and recall, surpassing accuracy which is misleading in imbalanced financial data."
+  },
+  "metrics": {
+    "accuracy": 1.0,
+    "balanced_accuracy": 1.0,
+    "fraud_precision": 1.0,
+    "fraud_recall": 1.0,
+    "fraud_f1": 1.0,
+    "roc_auc": 1.0,
+    "pr_auc": 1.0,
+    "confusion_matrix": {
+      "raw": [
+        [
+          1158,
+          0
+        ],
+        [
+          0,
+          42
+        ]
+      ],
+      "true_negatives": 1158,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "true_positives": 42,
+      "specificity": 1.0,
+      "false_positive_rate": 0.0
+    }
+  },
+  "rationale": "Selected 'ExtraTrees' out of 5 candidate models based on optimal Fraud F1 (1.0000), ROC AUC (1.0), and Fraud Recall (1.0000). Accuracy alone (100.00%) was not used as the decision criterion due to severe class imbalance.",
+  "ranked_candidates": [
+    {
+      "rank": 1,
+      "model_name": "ExtraTrees",
+      "fraud_f1": 1.0,
+      "roc_auc": 1.0,
+      "fraud_recall": 1.0,
+      "accuracy": 1.0
+    },
+    {
+      "rank": 2,
+      "model_name": "RandomForest",
+      "fraud_f1": 0.9882,
+      "roc_auc": 1.0,
+      "fraud_recall": 1.0,
+      "accuracy": 0.9992
+    },
+    {
+      "rank": 3,
+      "model_name": "HistGradientBoosting",
+      "fraud_f1": 0.9647,
+      "roc_auc": 0.9999,
+      "fraud_recall": 0.9762,
+      "accuracy": 0.9975
+    },
+    {
+      "rank": 4,
+      "model_name": "LogisticRegression",
+      "fraud_f1": 0.9545,
+      "roc_auc": 0.9999,
+      "fraud_recall": 1.0,
+      "accuracy": 0.9967
+    },
+    {
+      "rank": 5,
+      "model_name": "DecisionTree",
+      "fraud_f1": 0.9535,
+      "roc_auc": 0.9876,
+      "fraud_recall": 0.9762,
+      "accuracy": 0.9967
+    }
+  ],
+  "selection_timestamp": "2026-09-17T01:52:54.077628"
+}

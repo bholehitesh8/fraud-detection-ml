@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{{ error_title|default("Error Occurred") }} &bull; FraudGuard ML{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 3rem auto; text-align: center;">
+    <div class="card" style="padding: 3rem 2rem; border-color: rgba(239, 68, 68, 0.3); background: var(--bg-surface);">
+        <div style="margin-bottom: 1.5rem;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); font-size: 2.25rem;">
+                {% if status_code == 404 %}
+                    🔍
+                {% elif status_code == 403 or status_code == 401 %}
+                    🔒
+                {% elif status_code == 429 %}
+                    ⏱️
+                {% elif status_code == 400 or status_code == 422 %}
+                    ⚠️
+                {% else %}
+                    ⚡
+                {% endif %}
+            </span>
+        </div>
+
+        <span class="badge {{ 'badge-fraud' if status_code >= 500 or status_code == 403 else 'badge-safe' }}" style="font-size: 0.85rem; padding: 0.35rem 0.85rem; letter-spacing: 0.05em; text-transform: uppercase;">
+            HTTP {{ status_code|default(500) }} &bull; {{ error_type|default("Application Error") }}
+        </span>
+
+        <h1 style="font-size: 2rem; font-weight: 800; margin: 1rem 0 0.75rem; color: var(--text-primary);">
+            {{ error_title|default("An Error Occurred") }}
+        </h1>
+
+        <p style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.6; max-width: 520px; margin: 0 auto 2rem;">
+            {{ error_message|default("The requested operation could not be completed as expected.") }}
+        </p>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            {% if current_user %}
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary" style="padding: 0.65rem 1.4rem;">
+                📊 Return to Dashboard
+            </a>
+            <a href="{{ url_for('transactions.predict') }}" class="btn btn-secondary" style="padding: 0.65rem 1.4rem;">
+                ⚡ Evaluate Transaction
+            </a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary" style="padding: 0.65rem 1.4rem;">
+                🔑 Sign In
+            </a>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary" style="padding: 0.65rem 1.4rem;">
+                🏠 Home Page
+            </a>
+            {% endif %}
+            <a href="{{ url_for('main.about') }}" class="btn btn-secondary" style="padding: 0.65rem 1.4rem;">
+                🧠 System Documentation
+            </a>
+        </div>
+
+        <div style="margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-subtle); font-size: 0.82rem; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+            <span>Reference Code: <code>ERR-{{ status_code|default(500) }}</code></span>
+            <span>Security Protected &bull; Incident Audited</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

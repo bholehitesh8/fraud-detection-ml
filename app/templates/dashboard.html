@@ -1,0 +1,925 @@
+{% extends "base.html" %}
+
+{% block title %}Fraud Intelligence Center &bull; FraudGuard AI{% endblock %}
+
+{% block content %}
+<!-- =========================================================================
+     1. ENTERPRISE DASHBOARD HEADER
+     ========================================================================= -->
+<div class="fic-header-card">
+    <div class="fic-header-left">
+        <div class="fic-brand-row">
+            <div class="fic-emblem">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M9 12l2 2 4-4"/>
+                </svg>
+            </div>
+            <div class="fic-brand-meta">
+                <span class="fic-brand-title">FraudGuard <span>AI</span></span>
+                <span class="fic-platform-badge">Fraud Intelligence Center</span>
+            </div>
+            <span class="fic-role-pill role-{{ (current_user.role if current_user else 'analyst')|lower }}">
+                {{ (current_user.role if current_user else 'analyst')|upper }}
+            </span>
+            <span class="fic-user-name-tag" style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 0.25rem;">
+                Operator: <strong style="color: var(--text-primary);">{{ current_user.username if current_user else 'Security Analyst' }}</strong>
+            </span>
+        </div>
+        <h1 class="fic-title">Fraud Detection Dashboard</h1>
+        <p class="fic-subtitle">
+            Fraud Detection Analytics Center &bull; AI-powered transaction security monitoring &bull; Real-time fraud risk surveillance
+        </p>
+    </div>
+
+    <div class="fic-header-right">
+        <!-- Live Clock & Context Meta -->
+        <div class="fic-meta-group">
+            <div class="fic-time-display">
+                <span class="fic-time-icon">🕒</span>
+                <span id="ficLiveClock" class="fic-clock-text">Synchronizing UTC...</span>
+            </div>
+            <div class="fic-pills-row">
+                <span class="fic-status-chip {{ 'status-nominal' if analytics.system_status.all_healthy else 'status-warning' }}" id="ficSystemStatusPill">
+                    <span class="fic-live-dot"></span>
+                    <span id="ficSystemStatusText">{{ 'ALL SYSTEMS OPERATIONAL' if analytics.system_status.all_healthy else 'SYSTEM DEGRADED' }}</span>
+                </span>
+                <span class="fic-alert-chip {{ 'has-alerts' if analytics.fraud_alerts else 'no-alerts' }}" id="ficAlertCountChip" title="Active High-Risk Interceptions">
+                    <span class="fic-alert-icon">⚠️</span>
+                    <span id="ficAlertCountText">{{ analytics.fraud_alerts|length }} Threat Alert{{ 's' if analytics.fraud_alerts|length != 1 else '' }}</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Action Controls -->
+        <div class="fic-action-controls">
+            <button type="button" class="btn btn-secondary fic-refresh-btn" id="refreshAnalyticsBtn" title="Refresh live telemetry from SQLite database">
+                <span id="refreshSpinner" style="display: none;" class="spinning">🔄</span>
+                <span id="refreshBtnIcon">🔄</span>
+                <span id="refreshBtnText">Refresh Telemetry</span>
+            </button>
+            <a href="{{ url_for('transactions.predict') }}" class="btn btn-primary fic-evaluate-btn">
+                <span>⚡ Evaluate Transaction</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     2. REAL-TIME SECURITY STATUS PANEL (Real System Health Checks)
+     ========================================================================= -->
+<div class="fic-health-panel" id="systemHealthSection">
+    <div class="fic-health-header">
+        <div class="fic-section-title-wrap">
+            <span class="fic-section-icon">🛡️</span>
+            <span class="fic-section-title">SYSTEM SECURITY</span>
+        </div>
+        <span class="fic-health-sub">Live infrastructure diagnostic probes &bull; Verified in real-time</span>
+    </div>
+
+    <div class="fic-health-grid">
+        <!-- Probe 1: API Engine -->
+        <div class="fic-health-card">
+            <div class="fic-card-top">
+                <span class="fic-card-name">{{ analytics.system_status.api.name }}</span>
+                <span class="fic-card-status {{ analytics.system_status.api.badge_class }}">
+                    <span class="fic-dot"></span> ✓ {{ analytics.system_status.api.status }}
+                </span>
+            </div>
+            <div class="fic-card-detail">{{ analytics.system_status.api.detail }}</div>
+            <div class="fic-card-foot">Latency: <strong>{{ analytics.system_status.api.latency }}</strong></div>
+        </div>
+
+        <!-- Probe 2: Database Cluster -->
+        <div class="fic-health-card">
+            <div class="fic-card-top">
+                <span class="fic-card-name">{{ analytics.system_status.database.name }}</span>
+                <span class="fic-card-status {{ analytics.system_status.database.badge_class }}">
+                    <span class="fic-dot"></span> ✓ {{ analytics.system_status.database.status }}
+                </span>
+            </div>
+            <div class="fic-card-detail">{{ analytics.system_status.database.detail }}</div>
+            <div class="fic-card-foot">Audit Ledger: <strong>{{ analytics.summary.total_predictions }} Records</strong></div>
+        </div>
+
+        <!-- Probe 3: ML Inference Core -->
+        <div class="fic-health-card">
+            <div class="fic-card-top">
+                <span class="fic-card-name">{{ analytics.system_status.ml_model.name }}</span>
+                <span class="fic-card-status {{ analytics.system_status.ml_model.badge_class }}">
+                    <span class="fic-dot"></span> ✓ {{ analytics.system_status.ml_model.status }}
+                </span>
+            </div>
+            <div class="fic-card-detail">{{ analytics.system_status.ml_model.detail }}</div>
+            <div class="fic-card-foot">Pipeline: <strong>16 Dimensions Fitted</strong></div>
+        </div>
+
+        <!-- Probe 4: Access Control -->
+        <div class="fic-health-card">
+            <div class="fic-card-top">
+                <span class="fic-card-name">{{ analytics.system_status.authentication.name }}</span>
+                <span class="fic-card-status {{ analytics.system_status.authentication.badge_class }}">
+                    <span class="fic-dot"></span> ✓ {{ analytics.system_status.authentication.status }}
+                </span>
+            </div>
+            <div class="fic-card-detail">{{ analytics.system_status.authentication.detail }}</div>
+            <div class="fic-card-foot">Session: <strong>{{ (current_user.username if current_user else 'analyst') }} (Active)</strong></div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     3. GLOBAL TELEMETRY FILTERS
+     ========================================================================= -->
+<div class="fic-filter-bar">
+    <div class="fic-filter-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+        <span>Global Telemetry Filters:</span>
+    </div>
+    <div class="fic-filter-inputs">
+        <select id="globalFilterDays" class="fic-select" aria-label="Filter by Date Range">
+            <option value="">All Time History</option>
+            <option value="1">Last 24 Hours</option>
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+        </select>
+
+        <select id="globalFilterCurrency" class="fic-select" aria-label="Filter by Currency">
+            <option value="">All Currencies</option>
+            {% for c in analytics.currency_distribution %}
+                <option value="{{ c.currency }}">{{ c.currency }} ({{ c.count }})</option>
+            {% endfor %}
+        </select>
+
+        <select id="globalFilterStatus" class="fic-select" aria-label="Filter by Outcome">
+            <option value="">All Outcomes</option>
+            <option value="fraud">Fraudulent Caught</option>
+            <option value="safe">Legitimate Approved</option>
+        </select>
+
+        <select id="globalFilterRisk" class="fic-select" aria-label="Filter by Risk Tier">
+            <option value="">All Risk Tiers</option>
+            <option value="Critical">Critical Risk</option>
+            <option value="High">High Risk</option>
+            <option value="Moderate">Moderate / Medium Risk</option>
+            <option value="Low">Low Risk</option>
+        </select>
+
+        <button type="button" id="btnResetFilters" class="btn btn-secondary btn-sm fic-btn-reset">
+            Reset Filters
+        </button>
+    </div>
+</div>
+
+<!-- =========================================================================
+     4. ADVANCED KPI SECTION (Real Database Data Only)
+     ========================================================================= -->
+<div class="fic-kpi-grid">
+    <!-- KPI 1: Total Predictions -->
+    <div class="fic-kpi-card">
+        <div class="fic-kpi-meta">
+            <span class="fic-kpi-label">Total Transactions</span>
+            <span class="fic-kpi-icon icon-charcoal">📊</span>
+        </div>
+        <div class="fic-kpi-val" id="kpiTotal">{{ analytics.summary.total_predictions }}</div>
+        <div class="fic-kpi-desc">
+            <span>Verified audit records in database</span>
+        </div>
+    </div>
+
+    <!-- KPI 2: Fraudulent Detected -->
+    <div class="fic-kpi-card">
+        <div class="fic-kpi-meta">
+            <span class="fic-kpi-label">Fraud Detected</span>
+            <span class="fic-kpi-icon icon-red">🚨</span>
+        </div>
+        <div class="fic-kpi-val val-red" id="kpiFraud">{{ analytics.summary.fraudulent_predictions }}</div>
+        <div class="fic-kpi-desc">
+            <span class="fic-tag tag-red">Intercepted &amp; Quarantined</span>
+        </div>
+    </div>
+
+    <!-- KPI 3: Safe Transactions -->
+    <div class="fic-kpi-card">
+        <div class="fic-kpi-meta">
+            <span class="fic-kpi-label">Safe Transactions</span>
+            <span class="fic-kpi-icon icon-green">🛡️</span>
+        </div>
+        <div class="fic-kpi-val val-green" id="kpiLegit">{{ analytics.summary.safe_predictions }}</div>
+        <div class="fic-kpi-desc">
+            <span class="fic-tag tag-green">Legitimate Approved</span>
+        </div>
+    </div>
+
+    <!-- KPI 4: Fraud Rate -->
+    <div class="fic-kpi-card">
+        <div class="fic-kpi-meta">
+            <span class="fic-kpi-label">Fraud Rate</span>
+            <span class="fic-kpi-icon icon-amber">📈</span>
+        </div>
+        <div class="fic-kpi-val {{ 'val-red' if analytics.summary.fraud_percentage > 5 else ('val-amber' if analytics.summary.fraud_percentage > 2 else 'val-green') }}" id="kpiRate">
+            {{ analytics.summary.fraud_percentage }}%
+        </div>
+        <div class="fic-kpi-desc">
+            <span>{{ analytics.summary.safe_percentage }}% Fleet Clearance</span>
+        </div>
+    </div>
+
+    <!-- KPI 5: Average Transaction Amount -->
+    <div class="fic-kpi-card">
+        <div class="fic-kpi-meta">
+            <span class="fic-kpi-label">Average Amount</span>
+            <span class="fic-kpi-icon icon-teal">💵</span>
+        </div>
+        <div class="fic-kpi-val" id="kpiAvgAmount">
+            ${{ "{:,.2f}".format(analytics.summary.average_amount_usd) }}
+        </div>
+        <div class="fic-kpi-desc">
+            <span class="fic-mono">Base USD Normalized</span>
+        </div>
+    </div>
+
+    <!-- KPI 6: Highest Transaction Amount -->
+    <div class="fic-kpi-card">
+        <div class="fic-kpi-meta">
+            <span class="fic-kpi-label">Highest Amount</span>
+            <span class="fic-kpi-icon icon-purple">💎</span>
+        </div>
+        <div class="fic-kpi-val val-purple" id="kpiMaxAmount">
+            ${{ "{:,.2f}".format(analytics.summary.highest_amount_usd) }}
+        </div>
+        <div class="fic-kpi-desc">
+            <span class="fic-mono">Single Largest Evaluated</span>
+        </div>
+    </div>
+
+    <!-- KPI 7: Today's Predictions -->
+    <div class="fic-kpi-card">
+        <div class="fic-kpi-meta">
+            <span class="fic-kpi-label">Today's Activity</span>
+            <span class="fic-kpi-icon icon-cyan">📅</span>
+        </div>
+        <div class="fic-kpi-val" id="kpiTodayCount">{{ analytics.summary.today_predictions }}</div>
+        <div class="fic-kpi-desc">
+            <span>{{ analytics.summary.today_fraud }} Fraud Today (UTC)</span>
+        </div>
+    </div>
+
+    <!-- KPI 8: Current ML Model -->
+    <div class="fic-kpi-card">
+        <div class="fic-kpi-meta">
+            <span class="fic-kpi-label">Current ML Model</span>
+            <span class="fic-kpi-icon icon-teal">🧠</span>
+        </div>
+        <div class="fic-kpi-val" id="kpiModel" style="font-size: 1.25rem;">{{ analytics.summary.current_model }}</div>
+        <div class="fic-kpi-desc">
+            <span class="fic-tag tag-green">ExtraTrees v{{ analytics.model_info.model_version }}</span>
+        </div>
+    </div>
+
+    <!-- KPI 9: API / Database Status -->
+    <div class="fic-kpi-card">
+        <div class="fic-kpi-meta">
+            <span class="fic-kpi-label">API / Database Status</span>
+            <span class="fic-kpi-icon icon-green">⚡</span>
+        </div>
+        <div class="fic-kpi-val val-green" id="kpiStatus" style="font-size: 1.25rem;">
+            ● {{ analytics.system_status.api.status }}
+        </div>
+        <div class="fic-kpi-desc">
+            <span>SQLite Active &bull; {{ analytics.system_status.api.latency }}</span>
+        </div>
+    </div>
+
+    <!-- KPI 10: 7-Day Surveillance Volume -->
+    <div class="fic-kpi-card">
+        <div class="fic-kpi-meta">
+            <span class="fic-kpi-label">7-Day Volume</span>
+            <span class="fic-kpi-icon icon-blue">⏱️</span>
+        </div>
+        <div class="fic-kpi-val" id="kpiSevenDayCount">{{ analytics.summary.seven_day_predictions }}</div>
+        <div class="fic-kpi-desc">
+            {% if analytics.summary.prediction_change_pct is not none %}
+                <span class="{{ 'val-green' if analytics.summary.prediction_change_pct <= 0 else 'val-amber' }}">
+                    {{ '+' if analytics.summary.prediction_change_pct > 0 else '' }}{{ analytics.summary.prediction_change_pct }}% vs prev 7d
+                </span>
+            {% else %}
+                <span>{{ analytics.summary.seven_day_fraud }} fraud in past 7 days</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     5. MAIN TWO-COLUMN WORKSPACE
+     ========================================================================= -->
+<div class="fic-workspace-grid">
+    <!-- LEFT COLUMN: Primary Visualizations -->
+    <div class="fic-workspace-left">
+        <!-- 5.1 Fraud Risk Overview (Central Donut Panel) -->
+        <div class="fic-panel">
+            <div class="fic-panel-header">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                        <span class="fic-badge-tag badge-emerald" style="font-size: 0.72rem;">AI RISK OVERVIEW</span>
+                    </div>
+                    <h2 class="fic-panel-title">Fraud Risk Overview</h2>
+                    <p class="fic-panel-sub">Proportional distribution of evaluated transactions across safety classifications.</p>
+                </div>
+                <span class="fic-badge-tag badge-emerald">Verified DB Records</span>
+            </div>
+            <div class="fic-donut-wrapper">
+                <div class="fic-chart-container" style="position: relative; height: 260px; {% if analytics.summary.total_predictions == 0 %}display: none;{% endif %}">
+                    <canvas id="chartFraudVsSafe"></canvas>
+                </div>
+                {% if analytics.summary.total_predictions > 0 %}
+                <div class="fic-donut-summary">
+                    <div class="fic-stat-pill">
+                        <span class="fic-stat-dot dot-green"></span>
+                        <span class="fic-stat-label">Legitimate Approved:</span>
+                        <strong class="fic-stat-val">{{ analytics.fraud_vs_safe.safe_count }} ({{ analytics.fraud_vs_safe.safe_percentage }}%)</strong>
+                    </div>
+                    <div class="fic-stat-pill">
+                        <span class="fic-stat-dot dot-red"></span>
+                        <span class="fic-stat-label">Fraudulent Detected:</span>
+                        <strong class="fic-stat-val">{{ analytics.fraud_vs_safe.fraud_count }} ({{ analytics.fraud_vs_safe.fraud_percentage }}%)</strong>
+                    </div>
+                    <div class="fic-stat-pill">
+                        <span class="fic-stat-dot dot-teal"></span>
+                        <span class="fic-stat-label">Total Evaluated:</span>
+                        <strong class="fic-stat-val">{{ analytics.fraud_vs_safe.total }} Records</strong>
+                    </div>
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 3rem 1.5rem; color: var(--text-muted);">
+                    <p style="font-weight: 600; font-size: 1rem; margin-bottom: 0.5rem;">No transaction evaluations recorded yet.</p>
+                    <span style="font-size: 0.85rem;">Submit live transactions to populate real-time AI risk distribution analytics.</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 5.2 Transaction Activity Timeline -->
+        <div class="fic-panel">
+            <div class="fic-panel-header">
+                <div>
+                    <h2 class="fic-panel-title">Transaction Activity Timeline</h2>
+                    <p class="fic-panel-sub">Volume throughput and threat trends over actual database timestamps.</p>
+                </div>
+                <div class="fic-timeline-switch" role="group" aria-label="Timeline Switcher">
+                    <button type="button" class="btn-period" data-days="1">24 Hours</button>
+                    <button type="button" class="btn-period active" data-days="7">7 Days</button>
+                    <button type="button" class="btn-period" data-days="30">30 Days</button>
+                    <button type="button" class="btn-period" data-days="">All Time</button>
+                </div>
+            </div>
+            <div style="position: relative; height: 250px;">
+                <canvas id="chartFraudTrend"></canvas>
+            </div>
+        </div>
+
+        <!-- 5.3 Risk Level Distribution & Currency Breakdown -->
+        <div class="fic-twin-charts-grid">
+            <!-- Risk Level Distribution -->
+            <div class="fic-panel">
+                <div class="fic-panel-header">
+                    <div>
+                        <h2 class="fic-panel-title">Risk Level Distribution</h2>
+                        <p class="fic-panel-sub">Categorized by model probability thresholds &bull; High / Medium / Low counts.</p>
+                    </div>
+                </div>
+                <div style="position: relative; height: 200px;">
+                    <canvas id="chartRiskDist"></canvas>
+                </div>
+                <!-- Risk Tier Summary Pills -->
+                <div class="fic-risk-tiers-legend" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; justify-content: center;">
+                    {% for r in analytics.risk_distribution %}
+                    <span class="fic-stat-pill" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; border-radius: 6px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);">
+                        <span class="fic-stat-dot risk-dot-{{ r.risk_level|lower }}" style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: {{ '#ef4444' if r.risk_level in ['Critical', 'High'] else ('#f59e0b' if r.risk_level in ['Moderate', 'Medium'] else '#10b981') }};"></span>
+                        <span style="color: var(--text-secondary); margin-left: 0.35rem;">{{ r.risk_level }}:</span>
+                        <strong style="color: var(--text-primary); margin-left: 0.25rem;">{{ r.count }} ({{ r.percentage }}%)</strong>
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Currency Volume Distribution -->
+            <div class="fic-panel">
+                <div class="fic-panel-header">
+                    <div>
+                        <h2 class="fic-panel-title">Currency Distribution</h2>
+                        <p class="fic-panel-sub">Transaction evaluations by ISO 4217 currency.</p>
+                    </div>
+                </div>
+                <div style="position: relative; height: 200px;">
+                    <canvas id="chartCurrencyDist"></canvas>
+                </div>
+                <div style="text-align: center; margin-top: 1rem; font-size: 0.75rem; color: var(--text-muted);">
+                    Strict multi-currency isolation: amounts segregated per ISO currency.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Alert Center, Pattern Insights, Model Telemetry -->
+    <div class="fic-workspace-right">
+        <!-- 5.4 Fraud Alert Center -->
+        <div class="fic-panel fic-alerts-card">
+            <div class="fic-panel-header">
+                <div>
+                    <div class="fic-title-flex">
+                        <span class="fic-alert-bell">🚨</span>
+                        <h2 class="fic-panel-title">Fraud Alert Center</h2>
+                    </div>
+                    <p class="fic-panel-sub">Recent high-risk anomalies intercepted from real database.</p>
+                </div>
+                <span class="fic-counter-pill">{{ analytics.fraud_alerts|length }} Intercepted</span>
+            </div>
+
+            <div class="fic-alert-list" id="ficAlertsList">
+                {% if analytics.fraud_alerts %}
+                    {% for a in analytics.fraud_alerts %}
+                    <div class="fic-alert-item alert-{{ a.severity }}">
+                        <div class="fic-alert-top">
+                            <div class="fic-alert-ref-wrap">
+                                <span class="fic-severity-tag tag-{{ a.severity }}">{{ a.risk_level|upper }}</span>
+                                <code class="fic-alert-ref">{{ a.ref }}</code>
+                            </div>
+                            <span class="fic-alert-score">{{ a.risk_score }}% Risk</span>
+                        </div>
+                        <div class="fic-alert-body">
+                            <div class="fic-alert-amount">
+                                <strong>{{ "{:,.2f}".format(a.amount) }} {{ a.currency }}</strong>
+                                <span class="fic-alert-type">{{ a.transaction_type }}</span>
+                            </div>
+                            <div class="fic-alert-time">{{ a.created_at }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="fic-empty-alerts">
+                        <span class="fic-check-icon">✓</span>
+                        <p>No active fraud alerts</p>
+                        <span class="fic-empty-sub">All evaluated transactions conform to normal baseline risk parameters.</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 5.5 AI Pattern Insights (Data-Grounded Only) -->
+        <div class="fic-panel fic-insights-card">
+            <div class="fic-panel-header">
+                <div>
+                    <div class="fic-title-flex">
+                        <span class="fic-sparkle-icon">🧠</span>
+                        <h2 class="fic-panel-title">AI Pattern Insights</h2>
+                    </div>
+                    <p class="fic-panel-sub">Empirical findings calculated from recorded transaction telemetry.</p>
+                </div>
+            </div>
+
+            <div class="fic-insights-list" id="ficInsightsList">
+                {% if analytics.ai_insights %}
+                    {% for ins in analytics.ai_insights %}
+                    <div class="fic-insight-row">
+                        <span class="fic-insight-badge badge-{{ ins.category|lower }}">{{ ins.badge }}</span>
+                        <p class="fic-insight-text">{{ ins.text }}</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem;">
+                        Insufficient transaction history to derive statistical patterns.
+                    </p>
+                {% endif %}
+            </div>
+            <div class="fic-insights-foot">
+                <span>* Based on recorded prediction data in the verified SQLite ledger.</span>
+            </div>
+        </div>
+
+        <!-- 5.6 AI Model Status & Evaluation Performance -->
+        <div class="fic-panel fic-model-card">
+            <div class="fic-panel-header">
+                <div>
+                    <div class="fic-title-flex">
+                        <span class="fic-chip-icon">⚙️</span>
+                        <span class="fic-card-badge" style="font-size: 0.72rem; padding: 0.2rem 0.5rem; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 4px; color: var(--color-emerald); font-weight: 700; margin-right: 0.4rem;">AI MODEL</span>
+                        <h2 class="fic-panel-title">AI Model &amp; Performance</h2>
+                    </div>
+                    <p class="fic-panel-sub">{{ analytics.model_info.model_name }} &bull; Version {{ analytics.model_info.model_version }}</p>
+                </div>
+                <span class="fic-badge-tag badge-emerald"><span class="status-dot"></span> Model Ready</span>
+            </div>
+
+            <!-- Model Specifications -->
+            <div class="fic-model-specs">
+                <div class="fic-spec-item">
+                    <span class="fic-spec-label">Engine Architecture:</span>
+                    <strong class="fic-spec-val">{{ analytics.model_info.model_name }} Ensemble</strong>
+                </div>
+                <div class="fic-spec-item">
+                    <span class="fic-spec-label">Training Status:</span>
+                    <strong class="fic-spec-val" style="color: var(--status-safe);">Fitted &amp; Serialized</strong>
+                </div>
+                <div class="fic-spec-item">
+                    <span class="fic-spec-label">Prediction API:</span>
+                    <strong class="fic-spec-val" style="color: var(--status-safe);">Operational</strong>
+                </div>
+                <div class="fic-spec-item">
+                    <span class="fic-spec-label">Preprocessor Status:</span>
+                    <strong class="fic-spec-val" style="color: var(--status-safe);">{{ analytics.model_info.preprocessor_status }} (16 Features)</strong>
+                </div>
+                <div class="fic-spec-item">
+                    <span class="fic-spec-label">Training Benchmark:</span>
+                    <strong class="fic-spec-val">{{ analytics.model_info.training_dataset_size }} PaySim Records</strong>
+                </div>
+                <div class="fic-spec-item">
+                    <span class="fic-spec-label">Evaluated Count:</span>
+                    <strong class="fic-spec-val">{{ analytics.summary.total_predictions }} Predictions</strong>
+                </div>
+                <div class="fic-spec-item">
+                    <span class="fic-spec-label">Class Imbalance:</span>
+                    <strong class="fic-spec-val">{{ analytics.model_info.imbalance_ratio }}</strong>
+                </div>
+            </div>
+
+            <!-- Evaluation Metrics Grid -->
+            <div class="fic-metrics-grid">
+                <div class="fic-metric-cell">
+                    <span class="fic-metric-name">Accuracy</span>
+                    <strong class="fic-metric-num">{{ analytics.model_info.metrics.accuracy }}%</strong>
+                </div>
+                <div class="fic-metric-cell">
+                    <span class="fic-metric-name">Precision</span>
+                    <strong class="fic-metric-num">{{ analytics.model_info.metrics.fraud_precision }}</strong>
+                </div>
+                <div class="fic-metric-cell">
+                    <span class="fic-metric-name">Recall</span>
+                    <strong class="fic-metric-num">{{ analytics.model_info.metrics.fraud_recall }}</strong>
+                </div>
+                <div class="fic-metric-cell">
+                    <span class="fic-metric-name">Fraud F1</span>
+                    <strong class="fic-metric-num highlight-teal">{{ analytics.model_info.metrics.fraud_f1 }}</strong>
+                </div>
+                <div class="fic-metric-cell">
+                    <span class="fic-metric-name">ROC-AUC</span>
+                    <strong class="fic-metric-num highlight-emerald">{{ analytics.model_info.metrics.roc_auc }}</strong>
+                </div>
+            </div>
+
+            <div class="fic-eval-disclaimer">
+                ⚠️ {{ analytics.model_info.evaluation_note }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================================
+     6. CURRENCY INTELLIGENCE WIDGET
+     ========================================================================= -->
+<div class="fic-panel" style="margin-top: 1.5rem;">
+    <div class="fic-panel-header">
+        <div>
+            <div class="fic-title-flex">
+                <span class="fic-currency-icon">💱</span>
+                <h2 class="fic-panel-title">Currency Activity &amp; Strict Segregation</h2>
+            </div>
+            <p class="fic-panel-sub">
+                Multi-Currency Transaction Amounts Breakdown &bull; Verified volume counts and monetary sums per ISO 4217 currency. Disparate currencies are never added cross-currency.
+            </p>
+        </div>
+        <span class="fic-badge-tag badge-cyan">{{ analytics.amount_analytics.per_currency_breakdown|length }} Active ISO Currencies</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table fic-data-table">
+            <thead>
+                <tr>
+                    <th>Currency</th>
+                    <th>Evaluations</th>
+                    <th>Fraud Cases</th>
+                    <th>Safe Cases</th>
+                    <th>Total Recorded Volume</th>
+                    <th>Average Amount</th>
+                    <th>Min Amount</th>
+                    <th>Max Amount</th>
+                    <th>Volume Share</th>
+                </tr>
+            </thead>
+            <tbody id="currencyTableBody">
+                {% if analytics.amount_analytics.per_currency_breakdown %}
+                    {% for c in analytics.amount_analytics.per_currency_breakdown %}
+                    <tr>
+                        <td><span class="currency-badge">{{ c.currency }}</span></td>
+                        <td><strong>{{ c.count }}</strong></td>
+                        <td><span style="color: var(--status-fraud); font-weight: 700;">{{ c.fraud_count }}</span></td>
+                        <td><span style="color: var(--status-safe); font-weight: 700;">{{ c.safe_count }}</span></td>
+                        <td><strong>{{ "{:,.2f}".format(c.total_amount) }} {{ c.currency }}</strong></td>
+                        <td>{{ "{:,.2f}".format(c.avg_amount) }} {{ c.currency }}</td>
+                        <td style="color: var(--text-muted);">{{ "{:,.2f}".format(c.min_amount) }} {{ c.currency }}</td>
+                        <td><strong>{{ "{:,.2f}".format(c.max_amount) }} {{ c.currency }}</strong></td>
+                        <td>{{ c.percentage }}%</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                            No currency transaction data recorded yet.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- =========================================================================
+     7. RECENT TRANSACTION ACTIVITY MONITOR
+     ========================================================================= -->
+<div class="fic-panel" style="margin-top: 1.5rem;">
+    <div class="fic-panel-header" style="flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div class="fic-title-flex">
+                <span class="fic-table-icon">📋</span>
+                <h2 class="fic-panel-title">Recent Transaction Activity Monitor</h2>
+            </div>
+            <p class="fic-panel-sub">Transaction Security Audit Log &bull; Live audit trail of recently evaluated financial transactions.</p>
+        </div>
+        <div class="fic-search-wrap">
+            <input type="text" id="recentTableSearch" class="fic-table-search-input" placeholder="Search reference, type, account..." aria-label="Search recent transactions">
+            <a href="{{ url_for('main.history_page') }}" class="btn btn-secondary btn-sm" id="btnViewHistory">
+                View History &rarr;
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table fic-data-table" id="recentActivityTable">
+            <thead>
+                <tr>
+                    <th>Reference ID</th>
+                    <th>Timestamp (UTC)</th>
+                    <th>Channel / Type</th>
+                    <th>Original Amount</th>
+                    <th>Risk Level</th>
+                    <th>Fraud Confidence</th>
+                    <th>Final Decision</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="recentActivityTbody">
+                {% if transactions %}
+                    {% for t in transactions %}
+                    <tr>
+                        <td>
+                            <code>{{ t.transaction_ref }}</code>
+                            <button type="button" class="copy-btn" onclick="copyText('{{ t.transaction_ref }}', this)" title="Copy Reference">📋</button>
+                        </td>
+                        <td style="color: var(--text-muted); font-size: 0.85rem;">
+                            {{ t.created_at.strftime('%Y-%m-%d %H:%M:%S') if t.created_at else 'Recent' }}
+                        </td>
+                        <td><strong>{{ t.transaction_type }}</strong></td>
+                        <td>
+                            <strong>{{ "{:,.2f}".format(t.amount) }} {{ t.currency }}</strong>
+                            {% if t.currency != 'USD' and t.normalized_amount %}
+                                <div style="font-size: 0.72rem; color: var(--text-muted);">${{ "{:,.2f}".format(t.normalized_amount) }} USD</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="risk-level-badge risk-{{ (t.risk_level or 'low')|lower }}" style="font-size: 0.75rem; padding: 0.2rem 0.55rem; margin-bottom: 0;">
+                                {{ t.risk_level or 'Low' }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong>{{ "{:.1f}".format((t.fraud_probability * 100) if t.fraud_probability is not none else (t.confidence_score or 0)) }}%</strong>
+                        </td>
+                        <td>
+                            <span class="badge {{ 'badge-fraud' if t.is_fraud else 'badge-safe' }}">
+                                {{ t.prediction_label or ('Fraudulent' if t.is_fraud else 'Legitimate') }}
+                            </span>
+                        </td>
+                        <td style="text-align: right;">
+                            <button type="button" class="btn btn-secondary btn-sm" style="padding: 0.3rem 0.65rem; font-size: 0.8rem;"
+                                    onclick="inspectTransaction('{{ t.transaction_ref }}')">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            No transactions recorded in database.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- =========================================================================
+     8. SECURITY AUDIT ACTIVITY FEED
+     ========================================================================= -->
+<div class="fic-panel" style="margin-top: 1.5rem;">
+    <div class="fic-panel-header">
+        <div>
+            <div class="fic-title-flex">
+                <span class="fic-lock-icon">🔒</span>
+                <h2 class="fic-panel-title">Security &amp; Access Audit Stream</h2>
+            </div>
+            <p class="fic-panel-sub">
+                Immutable event stream of authentication and system milestones from SQLite <code>audit_logs</code>.
+            </p>
+        </div>
+        {% if current_user and current_user.is_admin %}
+            <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-secondary btn-sm">Full Security Ledger &rarr;</a>
+        {% endif %}
+    </div>
+
+    <div class="fic-security-feed" id="ficSecurityFeed">
+        {% if analytics.security_events %}
+            <div class="fic-audit-list">
+                {% for log in analytics.security_events %}
+                <div class="fic-audit-row">
+                    <div class="fic-audit-left">
+                        <span class="fic-audit-badge status-{{ log.status|lower }}">{{ log.status }}</span>
+                        <div class="fic-audit-meta">
+                            <strong>{{ log.action }}</strong>
+                            <span class="fic-audit-desc">{{ log.description }}</span>
+                        </div>
+                    </div>
+                    <div class="fic-audit-right">
+                        <span class="fic-audit-user">User: <strong>{{ log.username }}</strong></span>
+                        <span class="fic-audit-ip">{{ log.ip_address }}</span>
+                        <span class="fic-audit-time">{{ log.timestamp or 'Recent' }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: var(--text-muted); font-size: 0.88rem; padding: 1.5rem; text-align: center;">
+                No security audit events recorded for current session scope.
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- =========================================================================
+     9. ENTERPRISE QUICK ACTIONS BAR
+     ========================================================================= -->
+<div class="fic-quick-actions-bar" style="margin-top: 1.5rem;">
+    <div class="fic-quick-title">Quick Actions:</div>
+    <div class="fic-quick-btn-group">
+        <a href="{{ url_for('transactions.predict') }}" class="btn btn-primary">
+            ⚡ Evaluate Transaction
+        </a>
+        <a href="{{ url_for('main.history_page') }}" class="btn btn-secondary">
+            📜 Historical Ledger
+        </a>
+        <a href="{{ url_for('main.analytics_page') }}" class="btn btn-secondary">
+            📈 Deep Analytics
+        </a>
+        <a href="{{ url_for('main.about') }}" class="btn btn-secondary">
+            🧠 Model Architecture
+        </a>
+        {% if current_user and current_user.is_admin %}
+            <a href="{{ url_for('admin.users_list') }}" class="btn btn-secondary">
+                👥 User Directory
+            </a>
+            <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-secondary">
+                🛡️ Security Audit Logs
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- =========================================================================
+     10. TRANSACTION DETAIL INSPECTION MODAL
+     ========================================================================= -->
+<div class="modal-backdrop" id="detailModalBackdrop" style="display: none;">
+    <div class="modal-card" id="detailModalCard" style="max-width: 680px;">
+        <div class="modal-header">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.25rem;">🔍</span>
+                <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700;">Transaction Forensics</h3>
+            </div>
+            <button type="button" class="modal-close" onclick="closeDetailModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="detailModalBody" style="padding: 1.25rem;">
+            <div style="text-align: center; padding: 2rem;">Loading details...</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Live UTC Clock updater
+function updateFicLiveClock() {
+    const el = document.getElementById("ficLiveClock");
+    if (!el) return;
+    const now = new Date();
+    const utcStr = now.toUTCString().replace("GMT", "UTC");
+    el.innerText = utcStr;
+}
+setInterval(updateFicLiveClock, 1000);
+updateFicLiveClock();
+
+// Detail Inspection Modal Controls
+function inspectTransaction(ref) {
+    const modal = document.getElementById("detailModalBackdrop");
+    const body = document.getElementById("detailModalBody");
+    if (!modal || !body) return;
+
+    modal.style.display = "flex";
+    body.innerHTML = `<div style="text-align: center; padding: 2.5rem; color: var(--text-muted);"><span class="spinning">🔄</span> Retrieving transaction record ${ref}...</div>`;
+
+    fetch(`/api/predictions/${encodeURIComponent(ref)}`)
+        .then(res => {
+            if (!res.ok) throw new Error("Transaction record not found.");
+            return res.json();
+        })
+        .then(data => {
+            const t = data.data || data;
+            const isFraud = t.is_fraud;
+            body.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Transaction Identifier</div>
+                        <code style="font-size: 1.1rem; font-weight: 700;">${t.transaction_ref}</code>
+                    </div>
+                    <div>
+                        <span class="badge ${isFraud ? 'badge-fraud' : 'badge-safe'}" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+                            ${t.prediction_label || (isFraud ? 'Fraudulent' : 'Legitimate')}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+                    <div class="detail-item" style="padding: 0.75rem; border-radius: 6px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);">
+                        <div class="detail-label" style="font-size: 0.75rem; color: var(--text-muted);">Amount &amp; Currency</div>
+                        <div class="detail-val" style="font-size: 1.15rem; font-weight: 700;">${Number(t.amount).toFixed(2)} ${t.currency}</div>
+                    </div>
+                    <div class="detail-item" style="padding: 0.75rem; border-radius: 6px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);">
+                        <div class="detail-label" style="font-size: 0.75rem; color: var(--text-muted);">Channel / Type</div>
+                        <div class="detail-val" style="font-size: 1.15rem; font-weight: 700;">${t.transaction_type}</div>
+                    </div>
+                    <div class="detail-item" style="padding: 0.75rem; border-radius: 6px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);">
+                        <div class="detail-label" style="font-size: 0.75rem; color: var(--text-muted);">Fraud Confidence</div>
+                        <div class="detail-val" style="font-size: 1.15rem; font-weight: 700; color: ${isFraud ? 'var(--status-fraud)' : 'var(--status-safe)'};">
+                            ${Number(t.confidence_score || (t.fraud_probability * 100) || 0).toFixed(2)}%
+                        </div>
+                    </div>
+                    <div class="detail-item" style="padding: 0.75rem; border-radius: 6px; background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle);">
+                        <div class="detail-label" style="font-size: 0.75rem; color: var(--text-muted);">Assigned Risk Tier</div>
+                        <div class="detail-val" style="font-size: 1.15rem; font-weight: 700;">
+                            <span class="risk-level-badge risk-${(t.risk_level || 'low').toLowerCase()}">${t.risk_level || 'Low'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 0.9rem; font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.25rem;">
+                    <div><strong>Origin Account:</strong> <code>${t.sender_account || 'Masked Customer'}</code> (Bal Before: $${Number(t.old_balance_org || 0).toFixed(2)} &rarr; After: $${Number(t.new_balance_orig || 0).toFixed(2)})</div>
+                    <div><strong>Destination:</strong> <code>${t.receiver_account || 'Masked Merchant'}</code> (Bal Before: $${Number(t.old_balance_dest || 0).toFixed(2)} &rarr; After: $${Number(t.new_balance_dest || 0).toFixed(2)})</div>
+                    <div><strong>Device &amp; Location:</strong> ${t.device_type || 'Web'} &bull; ${t.location || 'Domestic'} (Step: ${t.step || 1.0})</div>
+                    <div><strong>Model Engine:</strong> ${t.model_name || 'ExtraTreesClassifier'} v${t.model_version || '1.0.0'} &bull; Status: ${t.status || 'COMPLETED'}</div>
+                </div>
+
+                <div style="text-align: right;">
+                    <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
+                </div>
+            `;
+        })
+        .catch(err => {
+            body.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--status-fraud);">
+                    <p>Failed to retrieve record: ${err.message}</p>
+                    <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
+                </div>
+            `;
+        });
+}
+
+function closeDetailModal() {
+    const modal = document.getElementById("detailModalBackdrop");
+    if (modal) modal.style.display = "none";
+}
+
+// Search Filter for Recent Transactions Table
+document.addEventListener("DOMContentLoaded", function() {
+    const searchInput = document.getElementById("recentTableSearch");
+    if (searchInput) {
+        searchInput.addEventListener("input", function() {
+            const term = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll("#recentActivityTbody tr");
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? "" : "none";
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

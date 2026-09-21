@@ -1,0 +1,47 @@
+{
+  "is_fitted": true,
+  "scaler_type": "robust",
+  "base_numeric_cols": [
+    "step",
+    "amount",
+    "oldbalanceOrg",
+    "newbalanceOrig",
+    "oldbalanceDest",
+    "newbalanceDest"
+  ],
+  "categorical_cols": [
+    "type"
+  ],
+  "all_numeric_cols": [
+    "step",
+    "amount",
+    "oldbalanceOrg",
+    "newbalanceOrig",
+    "oldbalanceDest",
+    "newbalanceDest",
+    "error_balance_orig",
+    "error_balance_dest",
+    "balance_diff_orig",
+    "amount_to_old_balance_ratio",
+    "is_account_drain"
+  ],
+  "output_feature_names": [
+    "step",
+    "amount",
+    "oldbalanceOrg",
+    "newbalanceOrig",
+    "oldbalanceDest",
+    "newbalanceDest",
+    "error_balance_orig",
+    "error_balance_dest",
+    "balance_diff_orig",
+    "amount_to_old_balance_ratio",
+    "is_account_drain",
+    "type_CASH_IN",
+    "type_CASH_OUT",
+    "type_DEBIT",
+    "type_PAYMENT",
+    "type_TRANSFER"
+  ],
+  "output_dimensionality": 16
+}

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Security Audit Ledger &bull; FraudGuard AI{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header Banner -->
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <span class="system-status-indicator" style="font-size: 0.72rem; padding: 0.2rem 0.6rem;">
+                    <span class="status-dot"></span> Tamper-Evident Ledger
+                </span>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">SOC Audit Trail</span>
+            </div>
+            <h2 style="font-size: 1.6rem; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">
+                Security Audit &amp; Compliance Logs
+            </h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                Comprehensive historical audit records for user authentications, privilege changes, and security events.
+            </p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.45rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span>Admin Dashboard</span>
+            </a>
+            <a href="{{ url_for('admin.users_list') }}" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.45rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>User Directory</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="card" style="margin-bottom: 1.75rem; padding: 1.25rem;">
+        <form method="GET" action="{{ url_for('admin.audit_logs') }}" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;">
+            <div class="form-group" style="margin-bottom: 0; flex: 2; min-width: 200px;">
+                <label for="search" style="font-size: 0.78rem;">Search Description, Action, or IP</label>
+                <input type="text" class="form-control" id="search" name="search" value="{{ search or '' }}" placeholder="e.g. login, admin, 127.0.0.1">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+                <label for="event_type" style="font-size: 0.78rem;">Category</label>
+                <select class="form-control" id="event_type" name="event_type">
+                    <option value="">All Categories</option>
+                    <option value="AUTH" {% if event_type == 'AUTH' %}selected{% endif %}>AUTH (Authentication)</option>
+                    <option value="ADMIN" {% if event_type == 'ADMIN' %}selected{% endif %}>ADMIN (User Mgmt)</option>
+                    <option value="SECURITY" {% if event_type == 'SECURITY' %}selected{% endif %}>SECURITY (Alerts)</option>
+                    <option value="ACCESS" {% if event_type == 'ACCESS' %}selected{% endif %}>ACCESS (Permissions)</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 130px;">
+                <label for="status" style="font-size: 0.78rem;">Outcome Status</label>
+                <select class="form-control" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="SUCCESS" {% if status == 'SUCCESS' %}selected{% endif %}>SUCCESS</option>
+                    <option value="FAILURE" {% if status == 'FAILURE' %}selected{% endif %}>FAILURE</option>
+                    <option value="WARNING" {% if status == 'WARNING' %}selected{% endif %}>WARNING</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.25rem; font-weight: 600;">
+                    Filter Logs
+                </button>
+                <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-secondary" style="padding: 0.65rem 1rem;">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Audit Logs Table -->
+    <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700;">Security Event Ledger</h3>
+            <span class="badge badge-safe" style="font-size: 0.74rem;">
+                Showing {{ logs|length }} of {{ total }} Events
+            </span>
+        </div>
+
+        {% if logs and logs|length > 0 %}
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 170px;">Timestamp (UTC)</th>
+                            <th style="width: 100px;">Category</th>
+                            <th>Action Key</th>
+                            <th>Event Description</th>
+                            <th>User Context</th>
+                            <th>IP Address</th>
+                            <th style="text-align: right;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">
+                                {{ log.timestamp }}
+                            </td>
+                            <td>
+                                <span class="event-type-pill event-{{ log.event_type|lower }}">
+                                    {{ log.event_type }}
+                                </span>
+                            </td>
+                            <td><code>{{ log.action }}</code></td>
+                            <td style="font-size: 0.88rem; color: var(--text-primary);">
+                                {{ log.description }}
+                            </td>
+                            <td>
+                                <strong>{{ log.username }}</strong>
+                            </td>
+                            <td style="font-size: 0.82rem; color: var(--text-muted); font-family: monospace;">
+                                {{ log.ip_address }}
+                            </td>
+                            <td style="text-align: right;">
+                                {% if log.status == 'SUCCESS' %}
+                                    <span class="badge badge-safe">SUCCESS</span>
+                                {% elif log.status == 'WARNING' %}
+                                    <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4);">WARNING</span>
+                                {% else %}
+                                    <span class="badge badge-fraud">FAILURE</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Server-Side Pagination Footer -->
+            <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem; border-top: 1px solid var(--border-subtle);">
+                <div style="font-size: 0.85rem; color: var(--text-muted);">
+                    Page {{ page }} of {{ total_pages }} &bull; {{ total }} Total Logged Entries
+                </div>
+
+                <div style="display: flex; gap: 0.5rem;">
+                    {% if has_prev %}
+                        <a href="{{ url_for('admin.audit_logs', page=page-1, event_type=event_type, status=status, search=search) }}" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;">
+                            &larr; Previous
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary" disabled style="padding: 0.4rem 0.85rem; font-size: 0.82rem; opacity: 0.4; cursor: not-allowed;">
+                            &larr; Previous
+                        </button>
+                    {% endif %}
+
+                    {% if has_next %}
+                        <a href="{{ url_for('admin.audit_logs', page=page+1, event_type=event_type, status=status, search=search) }}" class="btn btn-secondary" style="padding: 0.4rem 0.85rem; font-size: 0.82rem;">
+                            Next &rarr;
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary" disabled style="padding: 0.4rem 0.85rem; font-size: 0.82rem; opacity: 0.4; cursor: not-allowed;">
+                            Next &rarr;
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div style="padding: 3.5rem 1.5rem; text-align: center; color: var(--text-secondary);">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 255, 255, 0.04); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #94a3b8;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <h4 style="margin-bottom: 0.35rem; color: var(--text-primary);">No Audit Logs Matched Criteria</h4>
+                <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">Try adjusting or clearing search terms and category filters above.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
