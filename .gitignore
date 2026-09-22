@@ -19,10 +19,12 @@ ENV/
 *.sqlite3
 instance/
 
-# Serialized Model Artifacts (keep dir, ignore bulky generated files)
+# Serialized Model Artifacts (allow production model and preprocessor)
 saved_models/*.pkl
 saved_models/*.joblib
 !saved_models/.gitkeep
+!saved_models/fraud_model.joblib
+!saved_models/preprocessor_pipeline.joblib
 
 # Data files (ignore raw datasets from version control)
 data/raw/*
@@ -39,5 +41,3 @@ data/processed/*
 # OS files
 .DS_Store
 Thumbs.db
-
-saved_models/*.joblib
