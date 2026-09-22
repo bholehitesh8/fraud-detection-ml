@@ -92,28 +92,44 @@ class PredictionService:
         logger.info("Initializing prediction service artifacts from: %s", DEFAULT_SAVED_MODELS_DIR)
         errors = []
 
-        # 1. Load Preprocessor Pipeline
-        if not self.pipeline_path.exists():
+        # 1. Load Preprocessor Pipeline (check primary path, then fallback to candidates)
+        effective_pipeline_path = self.pipeline_path
+        if not effective_pipeline_path.exists():
+            candidates_pipe = DEFAULT_SAVED_MODELS_DIR / "candidates" / "preprocessor_pipeline.joblib"
+            if candidates_pipe.exists():
+                effective_pipeline_path = candidates_pipe
+                self.pipeline_path = effective_pipeline_path
+
+        if not effective_pipeline_path.exists():
             errors.append(f"Preprocessor pipeline file not found at: {self.pipeline_path}")
             self._pipeline = None
         else:
             try:
-                self._pipeline = DataPreprocessorPipeline.load(self.pipeline_path)
-                logger.info("Fitted preprocessor pipeline loaded successfully.")
+                self._pipeline = DataPreprocessorPipeline.load(effective_pipeline_path)
+                logger.info("Fitted preprocessor pipeline loaded successfully from: %s", effective_pipeline_path)
             except Exception as e:
                 err_msg = f"Failed to deserialize preprocessor pipeline: {e}"
                 logger.error(err_msg)
                 errors.append(err_msg)
                 self._pipeline = None
 
-        # 2. Load Trained Classifier Model
-        if not self.model_path.exists():
+        # 2. Load Trained Classifier Model (check primary path, then fallback to candidate ExtraTrees)
+        effective_model_path = self.model_path
+        if not effective_model_path.exists():
+            for candidate_name in ("ExtraTrees.joblib", "fraud_model.joblib"):
+                candidate_m = DEFAULT_SAVED_MODELS_DIR / "candidates" / candidate_name
+                if candidate_m.exists():
+                    effective_model_path = candidate_m
+                    self.model_path = effective_model_path
+                    break
+
+        if not effective_model_path.exists():
             errors.append(f"Model artifact file not found at: {self.model_path}")
             self._model = None
         else:
             try:
-                self._model = joblib.load(self.model_path)
-                logger.info("Trained classifier loaded successfully: %s", type(self._model).__name__)
+                self._model = joblib.load(effective_model_path)
+                logger.info("Trained classifier loaded successfully from %s: %s", effective_model_path, type(self._model).__name__)
             except Exception as e:
                 err_msg = f"Failed to deserialize model artifact: {e}"
                 logger.error(err_msg)
@@ -160,6 +176,9 @@ class PredictionService:
         """
         Provides detailed system diagnostics for the GET /api/health endpoint.
         """
+        if not self.is_ready:
+            self.load_artifacts()
+
         model_exists = self.model_path.exists()
         pipeline_exists = self.pipeline_path.exists()
         meta_exists = self.metadata_path.exists()

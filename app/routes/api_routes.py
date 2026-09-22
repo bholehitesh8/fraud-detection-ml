@@ -10,6 +10,7 @@ Provides machine-readable JSON endpoints for:
 - GET  /api/predictions/<identifier>: Single prediction details lookup by ID or TXN- ref.
 """
 
+import os
 from datetime import datetime, timezone
 import logging
 import time
@@ -101,7 +102,8 @@ def health_check():
     response_data = {
         "status": "healthy" if is_overall_healthy else "degraded",
         "service": "Fraud Detection ML API",
-        "version": "1.0.0",
+        "version": "1.0.1",
+        "deployed_commit": os.getenv("RENDER_GIT_COMMIT", "local-dev"),
         "api_running": True,
         "database": "connected" if db_ok else "error",
         "ml_model_loaded": service_health["ml_model_loaded"],
